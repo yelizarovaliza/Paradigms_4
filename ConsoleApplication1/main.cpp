@@ -4,19 +4,20 @@
 #include <stack>
 #include <sstream>
 #include <string>
-#include "library.cpp"
+#include <windows.h>
+#include "caesar.h"
 
-namespace std;
+using namespace std;
 
-typedef char* (*encrypt_ptr)(char*, int);
-typedef char* (*decrypt_ptr)(char*, int);
+typedef char* (*encrypt_ptr)(const char*, int);
+typedef char* (*decrypt_ptr)(const char*, int);
 
 FILE* encryptDecrypt;
 
 class CaesarCipher {
 public:
     static int encryptDecryptMenu(int UserChoice) {
-        HINSTANCE hDll = LoadLibrary(TEXT("caesar.dll"));
+        HINSTANCE hDll = LoadLibrary(TEXT("library.dll"));
         if (!hDll) {
             cerr << "Could not load the DLL!" << endl;
             return 1;
@@ -30,57 +31,91 @@ public:
             FreeLibrary(hDll);
             return 1;
         }
-        char* inputText;
+        
+        const int BufferSize = 100;
+        char inputText[BufferSize];
         int key;
-        char* inputFile;
+        const int FileNameSize = 256;
+        char inputFile[FileNameSize];
 
         switch (UserChoice) {
         case 16:
             cout << "Enter text to encrypt: " << endl;
-            cin >> inputText;
+            cin.ignore();
+            cin.getline(inputText, BufferSize);
             cout << "Enter key to encrypt: " << endl;
             cin >> key;
-            cout << encrypt_ptr(inputText, key) << endl;
-            break;
+            char* encryptedText;
+            encryptedText = encrypt(inputText, key);
+            cout << encryptedText << endl;
+            delete[] encryptedText; // Clean up allocated memory
+            break; 
         case 17:
             cout << "Enter text to decrypt: " << endl;
-            cin >> inputText;
+            cin.ignore();
+            cin.getline(inputText, BufferSize);
             cout << "Enter key to decrypt: " << endl;
             cin >> key;
-            cout << decrypt_ptr(inputText, key) << endl;
+            char* decryptedText;
+            decryptedText = decrypt(inputText, key);
+            cout << decryptedText << endl;
+            delete[] decryptedText; // Clean up allocated memory
             break;
         case 18:
             cout << "Enter file name to encrypt: " << endl;
-            cin >> inputFile;
+            cin.ignore();
+            cin.getline(inputFile, FileNameSize);
             cout << "Enter key to encrypt: " << endl;
             cin >> key;
             encryptDecrypt = fopen(inputFile, "r");
-            int ChunkSize = 128;
-            char chunk[ChunkSize];
-            size_t charsRead;
-            while (charsRead = fread(chunk, 1, ChunkSize, encryptDecrypt) != 0) {
-                chunk[charsRead] = '\0';
-                cout << encrypt_ptr(chunk, key) << endl;
+            if (!encryptDecrypt) {
+                cerr << "Could not open the file!" << endl;
+                FreeLibrary(hDll);
+                return 1;
+            }
+            {
+                const int ChunkSize = 128;
+                char chunk[ChunkSize];
+                size_t charsRead;
+                while ((charsRead = fread(chunk, 1, ChunkSize - 1, encryptDecrypt)) != 0) {
+                    chunk[charsRead] = '\0';
+                    char* encryptedChunk = encrypt(chunk, key);
+                    cout << encryptedChunk << endl;
+                    delete[] encryptedChunk; // Clean up allocated memory
+                }
             }
             fclose(encryptDecrypt);
             break;
         case 19:
             cout << "Enter file name to decrypt: " << endl;
-            cin >> inputFile;
+            cin.ignore();
+            cin.getline(inputFile, FileNameSize);
             cout << "Enter key to decrypt: " << endl;
             cin >> key;
             encryptDecrypt = fopen(inputFile, "r");
-            int ChunkSize = 128;
-            char chunk[ChunkSize];
-            size_t charsRead;
-            while (charsRead = fread(chunk, 1, ChunkSize, encryptDecrypt) != 0) {
-                chunk[charsRead] = '\0';
-                cout << decrypt_ptr(chunk, key) << endl;
+            if (!encryptDecrypt) {
+                cerr << "Could not open the file!" << endl;
+                FreeLibrary(hDll);
+                return 1;
+            }
+            {
+                const int ChunkSize = 128;
+                char chunk[ChunkSize];
+                size_t charsRead;
+                while ((charsRead = fread(chunk, 1, ChunkSize - 1, encryptDecrypt)) != 0) {
+                    chunk[charsRead] = '\0';
+                    char* decryptedChunk = decrypt(chunk, key);
+                    cout << decryptedChunk << endl;
+                    delete[] decryptedChunk; // Clean up allocated memory
+                }
             }
             fclose(encryptDecrypt);
             break;
-        };
-
+        default:
+            cout << "Invalid choice." << endl;
+            break;
+        }
+    
         FreeLibrary(hDll);
     }
 };

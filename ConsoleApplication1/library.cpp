@@ -3,7 +3,7 @@
 #include <cctype>
 
 // Encrypt function
-char* encrypt(char* rawText, int key) {
+char* encrypt(const char* rawText, int key) {
     int len = std::strlen(rawText);
     char* encryptedText = new char[len + 1];
     key = key % 26;
