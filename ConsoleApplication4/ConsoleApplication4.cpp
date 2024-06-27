@@ -35,8 +35,10 @@ public:
         int key;
         const int FileNameSize = 256;
         char inputFile[FileNameSize];
+        char outputFile[FileNameSize];
 
         FILE* encryptDecrypt;
+        FILE* outputFilePtr;
 
         switch (UserChoice) {
         case 16:
@@ -49,7 +51,7 @@ public:
                 char* encryptedText = encrypt(inputText, key);
                 if (encryptedText) {
                     cout << encryptedText << endl;
-                    delete[] encryptedText; // Clean up allocated memory
+                    delete[] encryptedText;
                 }
             }
             break;
@@ -63,7 +65,7 @@ public:
                 char* decryptedText = decrypt(inputText, key);
                 if (decryptedText) {
                     cout << decryptedText << endl;
-                    delete[] decryptedText; // Clean up allocated memory
+                    delete[] decryptedText;
                 }
             }
             break;
@@ -73,10 +75,20 @@ public:
             cin.getline(inputFile, FileNameSize);
             cout << "Enter key to encrypt: " << endl;
             cin >> key;
+            cout << "Enter output file name: " << endl;
+            cin.ignore();
+            cin.getline(outputFile, FileNameSize);
             {
                 errno_t err = fopen_s(&encryptDecrypt, inputFile, "r");
                 if (err != 0 || !encryptDecrypt) {
-                    cerr << "Could not open the file!" << endl;
+                    cerr << "Could not open the input file!" << endl;
+                    FreeLibrary(hDll);
+                    return 1;
+                }
+                err = fopen_s(&outputFilePtr, outputFile, "w");
+                if (err != 0 || !outputFilePtr) {
+                    cerr << "Could not open the output file!" << endl;
+                    fclose(encryptDecrypt);
                     FreeLibrary(hDll);
                     return 1;
                 }
@@ -87,11 +99,12 @@ public:
                     chunk[charsRead] = '\0';
                     char* encryptedChunk = encrypt(chunk, key);
                     if (encryptedChunk) {
-                        cout << encryptedChunk << endl;
-                        delete[] encryptedChunk; // Clean up allocated memory
+                        fwrite(encryptedChunk, sizeof(char), strlen(encryptedChunk), outputFilePtr);
+                        delete[] encryptedChunk;
                     }
                 }
                 fclose(encryptDecrypt);
+                fclose(outputFilePtr);
             }
             break;
         case 19:
@@ -100,10 +113,20 @@ public:
             cin.getline(inputFile, FileNameSize);
             cout << "Enter key to decrypt: " << endl;
             cin >> key;
+            cout << "Enter output file name: " << endl;
+            cin.ignore();
+            cin.getline(outputFile, FileNameSize);
             {
                 errno_t err = fopen_s(&encryptDecrypt, inputFile, "r");
                 if (err != 0 || !encryptDecrypt) {
-                    cerr << "Could not open the file!" << endl;
+                    cerr << "Could not open the input file!" << endl;
+                    FreeLibrary(hDll);
+                    return 1;
+                }
+                err = fopen_s(&outputFilePtr, outputFile, "w");
+                if (err != 0 || !outputFilePtr) {
+                    cerr << "Could not open the output file!" << endl;
+                    fclose(encryptDecrypt);
                     FreeLibrary(hDll);
                     return 1;
                 }
@@ -114,11 +137,12 @@ public:
                     chunk[charsRead] = '\0';
                     char* decryptedChunk = decrypt(chunk, key);
                     if (decryptedChunk) {
-                        cout << decryptedChunk << endl;
-                        delete[] decryptedChunk; // Clean up allocated memory
+                        fwrite(decryptedChunk, sizeof(char), strlen(decryptedChunk), outputFilePtr);
+                        delete[] decryptedChunk;
                     }
                 }
                 fclose(encryptDecrypt);
+                fclose(outputFilePtr);
             }
             break;
         default:
