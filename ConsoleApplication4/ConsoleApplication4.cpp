@@ -41,11 +41,10 @@ public:
         FILE* outputFilePtr;
 
         switch (UserChoice) {
-        case 16:
-            cout << "Enter text to encrypt: " << endl;
-            cin.ignore();
+        case 15:
+            cout << "Enter text to encrypt: ";
             cin.getline(inputText, BufferSize);
-            cout << "Enter key to encrypt: " << endl;
+            cout << "Enter key to encrypt: ";
             cin >> key;
             {
                 char* encryptedText = encrypt(inputText, key);
@@ -55,11 +54,10 @@ public:
                 }
             }
             break;
-        case 17:
-            cout << "Enter text to decrypt: " << endl;
-            cin.ignore();
+        case 16:
+            cout << "Enter text to decrypt: ";
             cin.getline(inputText, BufferSize);
-            cout << "Enter key to decrypt: " << endl;
+            cout << "Enter key to decrypt: ";
             cin >> key;
             {
                 char* decryptedText = decrypt(inputText, key);
@@ -69,14 +67,12 @@ public:
                 }
             }
             break;
-        case 18:
-            cout << "Enter file name to encrypt: " << endl;
-            cin.ignore();
+        case 17:
+            cout << "Enter file name to encrypt: ";
             cin.getline(inputFile, FileNameSize);
-            cout << "Enter key to encrypt: " << endl;
+            cout << "Enter key to encrypt: ";
             cin >> key;
-            cout << "Enter output file name: " << endl;
-            cin.ignore();
+            cout << "Enter output file name: ";
             cin.getline(outputFile, FileNameSize);
             {
                 errno_t err = fopen_s(&encryptDecrypt, inputFile, "r");
@@ -107,14 +103,12 @@ public:
                 fclose(outputFilePtr);
             }
             break;
-        case 19:
-            cout << "Enter file name to decrypt: " << endl;
-            cin.ignore();
+        case 18:
+            cout << "Enter file name to decrypt: ";
             cin.getline(inputFile, FileNameSize);
-            cout << "Enter key to decrypt: " << endl;
+            cout << "Enter key to decrypt: ";
             cin >> key;
-            cout << "Enter output file name: " << endl;
-            cin.ignore();
+            cout << "Enter output file name: ";
             cin.getline(outputFile, FileNameSize);
             {
                 errno_t err = fopen_s(&encryptDecrypt, inputFile, "r");
@@ -719,8 +713,12 @@ public:
                 insertPlace();
                 break;
             case 15:
+            case 16:
+            case 17:
+            case 18:
                 CaesarCipher::encryptDecryptMenu(userChoice);
                 break;
+          
             default:
                 cout << "Invalid choice, please try again." << endl;
             }

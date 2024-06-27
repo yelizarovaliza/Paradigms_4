@@ -23,6 +23,6 @@ char* encrypt(const char* rawText, int key) {
 }
 
 // Decrypt function
-char* decrypt(char* encryptedText, int key) {
+char* decrypt(const char* encryptedText, int key) {
     return encrypt(encryptedText, 26 - (key % 26));
 }
