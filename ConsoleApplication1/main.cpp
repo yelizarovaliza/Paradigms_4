@@ -6,6 +6,8 @@
 #include <string>
 #include "library.cpp"
 
+namespace std;
+
 typedef char* (*encrypt_ptr)(char*, int);
 typedef char* (*decrypt_ptr)(char*, int);
 
@@ -77,7 +79,8 @@ public:
             }
             fclose(encryptDecrypt);
             break;
-        }
+        };
+
         FreeLibrary(hDll);
     }
 };
@@ -87,33 +90,33 @@ class FileHandler {
 public:
     void fileSave(const char** linesArray, int currLine) {
         char fileName[128];
-        std::cout << "Enter the file name for saving: ";
-        std::cin.getline(fileName, 128);
+        cout << "Enter the file name for saving: ";
+        cin.getline(fileName, 128);
 
         std::ofstream file(fileName);
         if (!file) {
-            std::cout << "Error opening file for writing." << std::endl;
+            cout << "Error opening file for writing." << endl;
             return;
         }
 
         for (int i = 0; i <= currLine; i++) {
             if (linesArray[i] != NULL) {
-                file << linesArray[i] << std::endl;
+                file << linesArray[i] << endl;
             }
         }
 
         file.close();
-        std::cout << "Text has been saved successfully." << std::endl;
+        cout << "Text has been saved successfully." << endl;
     }
 
     void fileLoad(char** linesArray, size_t* lineSizes, int& currLine, int& maxLines) {
         char fileName[128];
-        std::cout << "Enter the file name for loading: ";
-        std::cin.getline(fileName, 128);
+        cout << "Enter the file name for loading: ";
+        cin.getline(fileName, 128);
 
         std::ifstream file(fileName);
         if (!file) {
-            std::cout << "Error opening file for reading." << std::endl;
+            cout << "Error opening file for reading." << endl;
             return;
         }
 
@@ -126,7 +129,7 @@ public:
                 linesArray = (char**)realloc(linesArray, maxLines * sizeof(char*));
                 lineSizes = (size_t*)realloc(lineSizes, maxLines * sizeof(size_t));
                 if (linesArray == NULL || lineSizes == NULL) {
-                    std::cout << "Memory reallocation failed." << std::endl;
+                    cout << "Memory reallocation failed." << endl;
                     file.close();
                     exit(EXIT_FAILURE);
                 }
@@ -138,7 +141,7 @@ public:
 
             linesArray[lineIndex] = (char*)malloc((len + 1) * sizeof(char));
             if (linesArray[lineIndex] == NULL) {
-                std::cout << "Memory allocation failed." << std::endl;
+                cout << "Memory allocation failed." << endl;
                 file.close();
                 return;
             }
@@ -149,7 +152,7 @@ public:
 
         file.close();
         currLine = lineIndex - 1;
-        std::cout << "Text has been loaded successfully." << std::endl;
+        cout << "Text has been loaded successfully." << endl;
     }
 };
 
@@ -160,11 +163,11 @@ private:
     int currLine;
     int maxLines;
     char* cutCopySaver;
-    std::stack<std::string> undoStack;
-    std::stack<std::string> redoStack;
+    stack<string> undoStack;
+    stack<string> redoStack;
 
     void saveState() {
-        std::string state;
+        string state;
         for (int i = 0; i <= currLine; i++) {
             if (linesArray[i] != NULL) {
                 state += linesArray[i];
@@ -177,11 +180,11 @@ private:
         }
     }
 
-    void restoreState(const std::string& state) {
-        std::istringstream ss(state);
-        std::string line;
+    void restoreState(const string& state) {
+        istringstream ss(state);
+        string line;
         currLine = 0;
-        while (std::getline(ss, line)) {
+        while (getline(ss, line)) {
             if (linesArray[currLine] != NULL) {
                 free(linesArray[currLine]);
             }
@@ -206,7 +209,7 @@ public:
         lineSizes = (size_t*)malloc(maxLines * sizeof(size_t));
         cutCopySaver = NULL;
         if (linesArray == NULL || lineSizes == NULL) {
-            std::cout << "Memory allocation failed." << std::endl;
+            cout << "Memory allocation failed." << endl;
             exit(EXIT_FAILURE);
         }
 
@@ -219,14 +222,14 @@ public:
     void addText() {
         saveState();
         char text[128];
-        std::cout << "Enter text to append: ";
-        std::cin.getline(text, 128);
+        cout << "Enter text to append: ";
+        cin.getline(text, 128);
 
         if (strlen(text) > 0) {
             if (linesArray[currLine] == NULL) {
                 linesArray[currLine] = (char*)malloc((strlen(text) + 1) * sizeof(char));
                 if (linesArray[currLine] == NULL) {
-                    std::cout << "Memory allocation failed." << std::endl;
+                    cout << "Memory allocation failed." << endl;
                     return;
                 }
                 strcpy_s(linesArray[currLine], strlen(text) + 1, text);
@@ -237,17 +240,17 @@ public:
                 lineSizes[currLine] += (strlen(text) + 1);
                 linesArray[currLine] = (char*)realloc(linesArray[currLine], lineSizes[currLine] * sizeof(char));
                 if (linesArray[currLine] == NULL) {
-                    std::cout << "Memory reallocation failed." << std::endl;
+                    cout << "Memory reallocation failed." << endl;
                     return;
                 }
                 strcat_s(linesArray[currLine], lineSizes[currLine], " ");
                 strcat_s(linesArray[currLine], lineSizes[currLine], text);
             }
 
-            std::cout << "Current line content: " << linesArray[currLine] << std::endl;
+            cout << "Current line content: " << linesArray[currLine] << endl;
         }
         else {
-            std::cout << "Error reading input." << std::endl;
+            cout << "Error reading input." << endl;
         }
     }
 
@@ -259,7 +262,7 @@ public:
             linesArray = (char**)realloc(linesArray, maxLines * sizeof(char*));
             lineSizes = (size_t*)realloc(lineSizes, maxLines * sizeof(size_t));
             if (linesArray == NULL || lineSizes == NULL) {
-                std::cout << "Memory reallocation failed." << std::endl;
+                cout << "Memory reallocation failed." << endl;
                 exit(EXIT_FAILURE);
             }
             for (int i = currLine; i < maxLines; i++) {
@@ -267,21 +270,21 @@ public:
                 lineSizes[i] = 0;
             }
         }
-        std::cout << "New line is started" << std::endl;
+        cout << "New line is started" << endl;
     }
 
     void outputAllText() {
         bool hasContent = false;
-        std::cout << "Here is all your lines which were written down: " << std::endl;
+        cout << "Here is all your lines which were written down: " << endl;
         for (int i = 0; i <= currLine; i++) {
             if (linesArray[i] != NULL && strlen(linesArray[i]) > 0) {
-                std::cout << linesArray[i] << std::endl;
+                cout << linesArray[i] << endl;
                 hasContent = true;
             }
         }
 
         if (!hasContent) {
-            std::cout << "No non-empty lines found." << std::endl;
+            cout << "No non-empty lines found." << endl;
         }
     }
 
@@ -290,17 +293,17 @@ public:
         int lineIndex, charIndex;
         char insertText[128];
 
-        std::cout << "Choose line and index: ";
-        std::cin >> lineIndex >> charIndex;
-        std::cin.ignore();
+        cout << "Choose line and index: ";
+        cin >> lineIndex >> charIndex;
+        cin.ignore();
 
         if (lineIndex < 0 || lineIndex >= maxLines || linesArray[lineIndex] == NULL) {
-            std::cout << "Invalid line index or line is empty." << std::endl;
+            cout << "Invalid line index or line is empty." << endl;
             return;
         }
 
-        std::cout << "Enter text to insert: ";
-        std::cin.getline(insertText, 128);
+        cout << "Enter text to insert: ";
+        cin.getline(insertText, 128);
 
         if (strlen(insertText) > 0) {
             size_t lenInsertText = strlen(insertText);
@@ -308,33 +311,33 @@ public:
             size_t lineLen = strlen(linesArray[lineIndex]);
 
             if (charIndex < 0 || (size_t)charIndex > lineLen) {
-                std::cout << "Invalid character index." << std::endl;
+                cout << "Invalid character index." << endl;
                 return;
             }
 
             lineSizes[lineIndex] += lenInsertText;
             linesArray[lineIndex] = (char*)realloc(linesArray[lineIndex], lineSizes[lineIndex] * sizeof(char));
             if (linesArray[lineIndex] == NULL) {
-                std::cout << "Memory reallocation failed." << std::endl;
+                cout << "Memory reallocation failed." << endl;
                 return;
             }
 
             memmove(&linesArray[lineIndex][charIndex + lenInsertText], &linesArray[lineIndex][charIndex], lineLen - charIndex + 1);
             memcpy(&linesArray[lineIndex][charIndex], insertText, lenInsertText);
 
-            std::cout << "Text has been inserted successfully." << std::endl;
-            std::cout << "Updated line content: " << linesArray[lineIndex] << std::endl;
+            cout << "Text has been inserted successfully." << endl;
+            cout << "Updated line content: " << linesArray[lineIndex] << endl;
         }
         else {
-            std::cout << "Error reading input." << std::endl;
+            cout << "Error reading input." << endl;
         }
     }
 
     void searchWord() {
         char searchTerm[128];
-        std::cout << "Enter text to search: ";
-        std::cin.ignore();
-        std::cin.getline(searchTerm, 128);
+        cout << "Enter text to search: ";
+        cin.ignore();
+        cin.getline(searchTerm, 128);
 
         if (strlen(searchTerm) > 0) {
             bool found = false;
@@ -346,7 +349,7 @@ public:
                         if (found) {
                             std::cout << ", ";
                         }
-                        std::cout << i << " " << index;
+                        cout << i << " " << index;
                         found = true;
                         pos = strstr(pos + 1, searchTerm);
                     }
@@ -354,14 +357,14 @@ public:
             }
 
             if (!found) {
-                std::cout << "Has not found your phrase." << std::endl;
+                cout << "Has not found your phrase." << endl;
             }
             else {
-                std::cout << std::endl;
+                cout << endl;
             }
         }
         else {
-            std::cout << "Error reading search." << std::endl;
+            cout << "Error reading search." << endl;
         }
     }
 
@@ -369,55 +372,55 @@ public:
         saveState();
         int lineIndex, charIndex, numChars;
 
-        std::cout << "Choose line, index and number of symbols: ";
-        std::cin >> lineIndex >> charIndex >> numChars;
-        std::cin.ignore();
+        cout << "Choose line, index and number of symbols: ";
+        cin >> lineIndex >> charIndex >> numChars;
+        cin.ignore();
 
         if (lineIndex < 0 || lineIndex >= maxLines || linesArray[lineIndex] == NULL) {
-            std::cout << "Invalid line index or line is empty." << std::endl;
+            cout << "Invalid line index or line is empty." << endl;
             return;
         }
 
         size_t lineLen = strlen(linesArray[lineIndex]);
 
         if (charIndex < 0 || charIndex >= lineLen || numChars <= 0 || (size_t)(charIndex + numChars) > lineLen) {
-            std::cout << "Invalid character index or number of symbols." << std::endl;
+            cout << "Invalid character index or number of symbols." << endl;
             return;
         }
         memmove(&linesArray[lineIndex][charIndex], &linesArray[lineIndex][charIndex + numChars], lineLen - charIndex - numChars + 1);
         lineSizes[lineIndex] -= numChars;
         linesArray[lineIndex] = (char*)realloc(linesArray[lineIndex], lineSizes[lineIndex] * sizeof(char));
         if (linesArray[lineIndex] == NULL) {
-            std::cout << "Memory reallocation failed." << std::endl;
+            cout << "Memory reallocation failed." << endl;
             return;
         }
 
-        std::cout << "Characters deleted successfully." << std::endl;
+        cout << "Characters deleted successfully." << endl;
     }
 
     void cutText() {
         saveState();
         int lineIndex, charIndex, numChars;
 
-        std::cout << "Choose line, index and number of symbols: ";
-        std::cin >> lineIndex >> charIndex >> numChars;
-        std::cin.ignore();
+        cout << "Choose line, index and number of symbols: ";
+        cin >> lineIndex >> charIndex >> numChars;
+        cin.ignore();
 
         if (lineIndex < 0 || lineIndex >= maxLines || linesArray[lineIndex] == NULL) {
-            std::cout << "Invalid line index or line is empty." << std::endl;
+            cout << "Invalid line index or line is empty." << endl;
             return;
         }
 
         size_t lineLen = strlen(linesArray[lineIndex]);
 
         if (charIndex < 0 || charIndex >= lineLen || numChars <= 0 || (size_t)(charIndex + numChars) > lineLen) {
-            std::cout << "Invalid character index or number of symbols." << std::endl;
+            cout << "Invalid character index or number of symbols." << endl;
             return;
         }
 
         cutCopySaver = (char*)realloc(cutCopySaver, (numChars + 1) * sizeof(char));
         if (cutCopySaver == NULL) {
-            std::cout << "Memory allocation for clipboard failed." << std::endl;
+            cout << "Memory allocation for clipboard failed." << endl;
             return;
         }
 
@@ -428,60 +431,60 @@ public:
         lineSizes[lineIndex] -= numChars;
         linesArray[lineIndex] = (char*)realloc(linesArray[lineIndex], lineSizes[lineIndex] * sizeof(char));
         if (linesArray[lineIndex] == NULL) {
-            std::cout << "Memory reallocation failed." << std::endl;
+            cout << "Memory reallocation failed." << endl;
             return;
         }
 
-        std::cout << "Text cut successfully." << std::endl;
+        cout << "Text cut successfully." << endl;
     }
 
     void copyText() {
         saveState();
         int lineIndex, charIndex, numChars;
 
-        std::cout << "Choose line, index and number of symbols: ";
-        std::cin >> lineIndex >> charIndex >> numChars;
-        std::cin.ignore();
+        cout << "Choose line, index and number of symbols: ";
+        cin >> lineIndex >> charIndex >> numChars;
+        cin.ignore();
 
         if (lineIndex < 0 || lineIndex >= maxLines || linesArray[lineIndex] == NULL) {
-            std::cout << "Invalid line index or line is empty." << std::endl;
+            cout << "Invalid line index or line is empty." << endl;
             return;
         }
 
         size_t lineLen = strlen(linesArray[lineIndex]);
 
         if (charIndex < 0 || charIndex >= lineLen || numChars <= 0 || (size_t)(charIndex + numChars) > lineLen) {
-            std::cout << "Invalid character index or number of symbols." << std::endl;
+            cout << "Invalid character index or number of symbols." << endl;
             return;
         }
 
         cutCopySaver = (char*)realloc(cutCopySaver, (numChars + 1) * sizeof(char));
         if (cutCopySaver == NULL) {
-            std::cout << "Memory allocation for clipboard failed." << std::endl;
+            cout << "Memory allocation for clipboard failed." << endl;
             return;
         }
 
         strncpy_s(cutCopySaver, numChars + 1, &linesArray[lineIndex][charIndex], numChars);
         cutCopySaver[numChars] = '\0';
 
-        std::cout << "Text copied successfully." << std::endl;
+        cout << "Text copied successfully." << endl;
     }
 
     void pasteText() {
         saveState();
         if (cutCopySaver == NULL) {
-            std::cout << "Buffer is empty." << std::endl;
+            cout << "Buffer is empty." << endl;
             return;
         }
 
         int lineIndex, charIndex;
 
-        std::cout << "Choose line and index: ";
-        std::cin >> lineIndex >> charIndex;
-        std::cin.ignore();
+        cout << "Choose line and index: ";
+        cin >> lineIndex >> charIndex;
+        cin.ignore();
 
         if (lineIndex < 0 || lineIndex >= maxLines || linesArray[lineIndex] == NULL) {
-            std::cout << "Invalid line index or line is empty." << std::endl;
+            cout << "Invalid line index or line is empty." << endl;
             return;
         }
 
@@ -489,21 +492,21 @@ public:
         size_t cutCoryLen = strlen(cutCopySaver);
 
         if (charIndex < 0 || (size_t)charIndex > lineLen) {
-            std::cout << "Invalid character index." << std::endl;
+            cout << "Invalid character index." << endl;
             return;
         }
 
         lineSizes[lineIndex] += cutCoryLen;
         linesArray[lineIndex] = (char*)realloc(linesArray[lineIndex], lineSizes[lineIndex] * sizeof(char));
         if (linesArray[lineIndex] == NULL) {
-            std::cout << "Memory reallocation failed." << std::endl;
+            cout << "Memory reallocation failed." << endl;
             return;
         }
 
         memmove(&linesArray[lineIndex][charIndex + cutCoryLen], &linesArray[lineIndex][charIndex], lineLen - charIndex + 1);
         memcpy(&linesArray[lineIndex][charIndex], cutCopySaver, cutCoryLen);
 
-        std::cout << "Text pasted successfully." << std::endl;
+        cout << "Text pasted successfully." << endl;
     }
 
     void insertPlace() {
@@ -511,17 +514,17 @@ public:
         int lineIndex, charIndex;
         char insertText[128];
 
-        std::cout << "Choose line and index: ";
-        std::cin >> lineIndex >> charIndex;
-        std::cin.ignore();
+        cout << "Choose line and index: ";
+        cin >> lineIndex >> charIndex;
+        cin.ignore();
 
         if (lineIndex < 0 || lineIndex >= maxLines || linesArray[lineIndex] == NULL) {
-            std::cout << "Invalid line index or line is empty." << std::endl;
+            cout << "Invalid line index or line is empty." << endl;
             return;
         }
 
-        std::cout << "Write text: ";
-        std::cin.getline(insertText, 128);
+        cout << "Write text: ";
+        cin.getline(insertText, 128);
 
         if (strlen(insertText) > 0) {
             size_t lenInsertText = strlen(insertText);
@@ -529,32 +532,32 @@ public:
             size_t lineLen = strlen(linesArray[lineIndex]);
 
             if (charIndex < 0 || (size_t)charIndex > lineLen) {
-                std::cout << "Invalid character index." << std::endl;
+                cout << "Invalid character index." << endl;
                 return;
             }
 
             lineSizes[lineIndex] += lenInsertText;
             linesArray[lineIndex] = (char*)realloc(linesArray[lineIndex], lineSizes[lineIndex] * sizeof(char));
             if (linesArray[lineIndex] == NULL) {
-                std::cout << "Memory reallocation failed." << std::endl;
+                cout << "Memory reallocation failed." << endl;
                 return;
             }
 
             memmove(&linesArray[lineIndex][charIndex + lenInsertText], &linesArray[lineIndex][charIndex], lineLen - charIndex + 1);
             memcpy(&linesArray[lineIndex][charIndex], insertText, lenInsertText);
 
-            std::cout << "Text has been inserted successfully." << std::endl;
-            std::cout << "Updated line content: " << linesArray[lineIndex] << std::endl;
+            cout << "Text has been inserted successfully." << endl;
+            cout << "Updated line content: " << linesArray[lineIndex] << endl;
         }
     }
 
     void undo() {
         if (undoStack.empty()) {
-            std::cout << "Nothing to undo." << std::endl;
+            cout << "Nothing to undo." << endl;
             return;
         }
 
-        std::string currentState;
+        string currentState;
         for (int i = 0; i <= currLine; i++) {
             if (linesArray[i] != NULL) {
                 currentState += linesArray[i];
@@ -563,16 +566,16 @@ public:
         }
         redoStack.push(currentState);
 
-        std::string lastState = undoStack.top();
+        string lastState = undoStack.top();
         undoStack.pop();
         restoreState(lastState);
 
-        std::cout << "Undo operation completed." << std::endl;
+        cout << "Undo operation completed." << endl;
     }
 
     void redo() {
         if (redoStack.empty()) {
-            std::cout << "Nothing to redo." << std::endl;
+            cout << "Nothing to redo." << endl;
             return;
         }
 
@@ -589,19 +592,19 @@ public:
         redoStack.pop();
         restoreState(nextState);
 
-        std::cout << "Redo operation completed." << std::endl;
+        cout << "Redo operation completed." << endl;
     }
 
     void run() {
         int userChoice = -1;
         while (userChoice != 0) {
-            std::cout << "Choose the command:" << std::endl;
-            std::cin >> userChoice;
-            std::cin.ignore();
+            cout << "Choose the command:" << endl;
+            cin >> userChoice;
+            cin.ignore();
 
             switch (userChoice) {
             case 0:
-                std::cout << "Exiting program." << std::endl;
+                cout << "Exiting program." << endl;
                 break;
             case 1:
                 addText();
@@ -649,7 +652,7 @@ public:
                 CaesarCipher::encryptDecryptMenu(userChoice);
                 break;
             default:
-                std::cout << "Invalid choice, please try again." << std::endl;
+                cout << "Invalid choice, please try again." << endl;
             }
         }
     }
