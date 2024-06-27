@@ -50,16 +50,36 @@ public:
         case 18:
             cout << "Enter file name to encrypt: " << endl;
             cin >> inputFile;
+            cout << "Enter key to encrypt: " << endl;
+            cin >> key;
+            encryptDecrypt = fopen(inputFile, "r");
+            int ChunkSize = 128;
+            char chunk[ChunkSize];
+            size_t charsRead;
+            while (charsRead = fread(chunk, 1, ChunkSize, encryptDecrypt) != 0) {
+                chunk[charsRead] = '\0';
+                cout << encrypt_ptr(chunk, key) << endl;
+            }
+            fclose(encryptDecrypt);
+            break;
+        case 19:
+            cout << "Enter file name to decrypt: " << endl;
+            cin >> inputFile;
             cout << "Enter key to decrypt: " << endl;
             cin >> key;
             encryptDecrypt = fopen(inputFile, "r");
-
-            cout << decrypt_ptr(inputText, key) << endl;
+            int ChunkSize = 128;
+            char chunk[ChunkSize];
+            size_t charsRead;
+            while (charsRead = fread(chunk, 1, ChunkSize, encryptDecrypt) != 0) {
+                chunk[charsRead] = '\0';
+                cout << decrypt_ptr(chunk, key) << endl;
+            }
+            fclose(encryptDecrypt);
+            break;
         }
+        FreeLibrary(hDll);
     }
-
-
-
 };
 
 
