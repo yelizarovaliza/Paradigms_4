@@ -5,6 +5,7 @@
 #include <sstream>
 #include <string>
 #include <windows.h>
+#include <direct.h>
 #include "caesar.h"
 
 using namespace std;
@@ -40,6 +41,15 @@ public:
         FILE* encryptDecrypt;
         FILE* outputFilePtr;
 
+        char currentPath[FILENAME_MAX];
+        if (!_getcwd(currentPath, sizeof(currentPath))) {
+            cerr << "Error getting current working directory" << endl;
+            FreeLibrary(hDll);
+            return 1;
+        }
+        currentPath[sizeof(currentPath) - 1] = '\0';
+        cout << "Current working directory: " << currentPath << endl;
+
         switch (UserChoice) {
         case 15:
             cout << "Enter text to encrypt: ";
@@ -49,7 +59,7 @@ public:
             {
                 char* encryptedText = encrypt(inputText, key);
                 if (encryptedText) {
-                    cout << encryptedText << endl;
+                    cout << "Encrypted text: " << encryptedText << endl;
                     delete[] encryptedText;
                 }
             }
@@ -62,83 +72,113 @@ public:
             {
                 char* decryptedText = decrypt(inputText, key);
                 if (decryptedText) {
-                    cout << decryptedText << endl;
+                    cout << "Decrypted text: " << decryptedText << endl;
                     delete[] decryptedText;
                 }
             }
             break;
-        case 17:
+        case 17: {
             cout << "Enter file name to encrypt: ";
+            cin.ignore();
             cin.getline(inputFile, FileNameSize);
             cout << "Enter key to encrypt: ";
             cin >> key;
+            cin.ignore();
             cout << "Enter output file name: ";
             cin.getline(outputFile, FileNameSize);
-            {
-                errno_t err = fopen_s(&encryptDecrypt, inputFile, "r");
-                if (err != 0 || !encryptDecrypt) {
-                    cerr << "Could not open the input file!" << endl;
-                    FreeLibrary(hDll);
-                    return 1;
-                }
-                err = fopen_s(&outputFilePtr, outputFile, "w");
-                if (err != 0 || !outputFilePtr) {
-                    cerr << "Could not open the output file!" << endl;
-                    fclose(encryptDecrypt);
-                    FreeLibrary(hDll);
-                    return 1;
-                }
-                const int ChunkSize = 128;
-                char chunk[ChunkSize];
-                size_t charsRead;
-                while ((charsRead = fread(chunk, 1, ChunkSize - 1, encryptDecrypt)) != 0) {
-                    chunk[charsRead] = '\0';
-                    char* encryptedChunk = encrypt(chunk, key);
-                    if (encryptedChunk) {
-                        fwrite(encryptedChunk, sizeof(char), strlen(encryptedChunk), outputFilePtr);
-                        delete[] encryptedChunk;
-                    }
-                }
-                fclose(encryptDecrypt);
-                fclose(outputFilePtr);
+
+            ifstream infile(inputFile);
+            if (!infile.good()) {
+                cerr << "Could not open the input file! File: " << inputFile << endl;
+                perror("Error");
+                FreeLibrary(hDll);
+                return 1;
             }
+            infile.close();
+
+            cout << "Trying to open input file: " << inputFile << endl;
+            encryptDecrypt = fopen(inputFile, "r");
+            if (!encryptDecrypt) {
+                cerr << "Could not open the input file! File: " << inputFile << endl;
+                perror("Error");
+                FreeLibrary(hDll);
+                return 1;
+            }
+            cout << "Trying to open output file: " << outputFile << endl;
+            outputFilePtr = fopen(outputFile, "w");
+            if (!outputFilePtr) {
+                cerr << "Could not open the output file! File: " << outputFile << endl;
+                perror("Error");
+                fclose(encryptDecrypt);
+                FreeLibrary(hDll);
+                return 1;
+            }
+            const int ChunkSize = 128;
+            char chunk[ChunkSize];
+            size_t charsRead;
+            while ((charsRead = fread(chunk, 1, ChunkSize - 1, encryptDecrypt)) != 0) {
+                chunk[charsRead] = '\0';
+                char* encryptedChunk = encrypt(chunk, key);
+                if (encryptedChunk) {
+                    fwrite(encryptedChunk, sizeof(char), strlen(encryptedChunk), outputFilePtr);
+                    delete[] encryptedChunk;
+                }
+            }
+            fclose(encryptDecrypt);
+            fclose(outputFilePtr);
             break;
-        case 18:
+        }
+        case 18: {
             cout << "Enter file name to decrypt: ";
+            cin.ignore();
             cin.getline(inputFile, FileNameSize);
             cout << "Enter key to decrypt: ";
             cin >> key;
+            cin.ignore();
             cout << "Enter output file name: ";
             cin.getline(outputFile, FileNameSize);
-            {
-                errno_t err = fopen_s(&encryptDecrypt, inputFile, "r");
-                if (err != 0 || !encryptDecrypt) {
-                    cerr << "Could not open the input file!" << endl;
-                    FreeLibrary(hDll);
-                    return 1;
-                }
-                err = fopen_s(&outputFilePtr, outputFile, "w");
-                if (err != 0 || !outputFilePtr) {
-                    cerr << "Could not open the output file!" << endl;
-                    fclose(encryptDecrypt);
-                    FreeLibrary(hDll);
-                    return 1;
-                }
-                const int ChunkSize = 128;
-                char chunk[ChunkSize];
-                size_t charsRead;
-                while ((charsRead = fread(chunk, 1, ChunkSize - 1, encryptDecrypt)) != 0) {
-                    chunk[charsRead] = '\0';
-                    char* decryptedChunk = decrypt(chunk, key);
-                    if (decryptedChunk) {
-                        fwrite(decryptedChunk, sizeof(char), strlen(decryptedChunk), outputFilePtr);
-                        delete[] decryptedChunk;
-                    }
-                }
-                fclose(encryptDecrypt);
-                fclose(outputFilePtr);
+
+            ifstream infile2(inputFile);
+            if (!infile2.good()) {
+                cerr << "Could not open the input file! File: " << inputFile << endl;
+                perror("Error");
+                FreeLibrary(hDll);
+                return 1;
             }
+            infile2.close();
+
+            cout << "Trying to open input file: " << inputFile << endl;
+            encryptDecrypt = fopen(inputFile, "r");
+            if (!encryptDecrypt) {
+                cerr << "Could not open the input file! File: " << inputFile << endl;
+                perror("Error");
+                FreeLibrary(hDll);
+                return 1;
+            }
+            cout << "Trying to open output file: " << outputFile << endl;
+            outputFilePtr = fopen(outputFile, "w");
+            if (!outputFilePtr) {
+                cerr << "Could not open the output file! File: " << outputFile << endl;
+                perror("Error");
+                fclose(encryptDecrypt);
+                FreeLibrary(hDll);
+                return 1;
+            }
+            const int ChunkSize = 128;
+            char chunk[ChunkSize];
+            size_t charsRead;
+            while ((charsRead = fread(chunk, 1, ChunkSize - 1, encryptDecrypt)) != 0) {
+                chunk[charsRead] = '\0';
+                char* decryptedChunk = decrypt(chunk, key);
+                if (decryptedChunk) {
+                    fwrite(decryptedChunk, sizeof(char), strlen(decryptedChunk), outputFilePtr);
+                    delete[] decryptedChunk;
+                }
+            }
+            fclose(encryptDecrypt);
+            fclose(outputFilePtr);
             break;
+        }
         default:
             cout << "Invalid choice." << endl;
             break;
@@ -718,7 +758,7 @@ public:
             case 18:
                 CaesarCipher::encryptDecryptMenu(userChoice);
                 break;
-
+          
             default:
                 cout << "Invalid choice, please try again." << endl;
             }
