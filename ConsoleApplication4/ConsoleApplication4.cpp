@@ -69,13 +69,10 @@ public:
             break;
         case 17:
             cout << "Enter file name to encrypt: ";
-            cin.ignore();
             cin.getline(inputFile, FileNameSize);
             cout << "Enter key to encrypt: ";
             cin >> key;
-            cin.ignore();
             cout << "Enter output file name: ";
-            cin.ignore();
             cin.getline(outputFile, FileNameSize);
             {
                 errno_t err = fopen_s(&encryptDecrypt, inputFile, "r");
@@ -108,13 +105,10 @@ public:
             break;
         case 18:
             cout << "Enter file name to decrypt: ";
-            cin.ignore();
             cin.getline(inputFile, FileNameSize);
             cout << "Enter key to decrypt: ";
-            cin >> key; 
-            cin.ignore();
+            cin >> key;
             cout << "Enter output file name: ";
-            cin.ignore();
             cin.getline(outputFile, FileNameSize);
             {
                 errno_t err = fopen_s(&encryptDecrypt, inputFile, "r");
@@ -724,7 +718,7 @@ public:
             case 18:
                 CaesarCipher::encryptDecryptMenu(userChoice);
                 break;
-          
+
             default:
                 cout << "Invalid choice, please try again." << endl;
             }
