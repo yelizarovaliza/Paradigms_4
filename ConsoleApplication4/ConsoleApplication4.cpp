@@ -79,11 +79,9 @@ public:
             break;
         case 17: {
             cout << "Enter file name to encrypt: ";
-            cin.ignore();
             cin.getline(inputFile, FileNameSize);
             cout << "Enter key to encrypt: ";
             cin >> key;
-            cin.ignore();
             cout << "Enter output file name: ";
             cin.getline(outputFile, FileNameSize);
 
@@ -130,11 +128,9 @@ public:
         }
         case 18: {
             cout << "Enter file name to decrypt: ";
-            cin.ignore();
             cin.getline(inputFile, FileNameSize);
             cout << "Enter key to decrypt: ";
             cin >> key;
-            cin.ignore();
             cout << "Enter output file name: ";
             cin.getline(outputFile, FileNameSize);
 
