@@ -1,3 +1,4 @@
+#define _CRT_SECURE_NO_WARNINGS
 #include <iostream>
 #include <fstream>
 #include <cstring>
@@ -10,27 +11,96 @@
 
 using namespace std;
 
-typedef char* (*encrypt_ptr)(const char*, int);
-typedef char* (*decrypt_ptr)(const char*, int);
+typedef char* (*encrypt_ptr_t)(const char*, int);
+typedef char* (*decrypt_ptr_t)(const char*, int);
 
 class CaesarCipher {
+private:
+    HINSTANCE handle;
+    encrypt_ptr_t encrypt_ptr;
+    decrypt_ptr_t decrypt_ptr;
+
 public:
-    static int encryptDecryptMenu(int UserChoice) {
-        HINSTANCE hDll = LoadLibrary(TEXT("library.dll"));
-        if (!hDll) {
-            cerr << "Could not load the DLL!" << endl;
-            return 1;
+    CaesarCipher() : handle(nullptr), encrypt_ptr(nullptr), decrypt_ptr(nullptr) {}
+
+    bool loadLibrary() {
+        handle = LoadLibrary(TEXT("C:/Users/User/Documents/GitHub/Paradigms_4/library.dll"));
+        if (!handle) {
+            std::cerr << "Could not load the DLL!" << std::endl;
+            return false;
         }
 
-        encrypt_ptr encrypt = (encrypt_ptr)GetProcAddress(hDll, "encrypt");
-        decrypt_ptr decrypt = (decrypt_ptr)GetProcAddress(hDll, "decrypt");
-
-        if (!encrypt || !decrypt) {
-            cerr << "Could not locate the functions!" << endl;
-            FreeLibrary(hDll);
-            return 1;
+        encrypt_ptr = (encrypt_ptr_t)GetProcAddress(handle, "encrypt");
+        if (!encrypt_ptr) {
+            std::cerr << "Could not locate the encrypt function!" << std::endl;
+            FreeLibrary(handle);
+            handle = nullptr;
+            return false;
         }
 
+        decrypt_ptr = (decrypt_ptr_t)GetProcAddress(handle, "decrypt");
+        if (!decrypt_ptr) {
+            std::cerr << "Could not locate the decrypt function!" << std::endl;
+            FreeLibrary(handle);
+            handle = nullptr;
+            return false;
+        }
+
+        return true;
+    }
+
+    bool processFile(const std::string& inputFilePath, const std::string& outputFilePath, int shift, bool encryptMode) {
+        FILE* inputFile = fopen(inputFilePath.c_str(), "r");
+        if (!inputFile) {
+            std::cerr << "Error opening input file: " << inputFilePath << std::endl;
+            return false;
+        }
+
+        FILE* outputFile = fopen(outputFilePath.c_str(), "w");
+        if (!outputFile) {
+            std::cerr << "Error opening output file: " << outputFilePath << std::endl;
+            fclose(inputFile);
+            return false;
+        }
+
+        auto processFunc = encryptMode ? encrypt_ptr : decrypt_ptr;
+        if (!processFunc) {
+            std::cerr << "Error: process function pointer is null!" << std::endl;
+            fclose(inputFile);
+            fclose(outputFile);
+            return false;
+        }
+
+        const int ChunkSize = 128;
+        char chunk[ChunkSize];
+        size_t charsRead;
+        while ((charsRead = fread(chunk, 1, ChunkSize - 1, inputFile)) != 0) {
+            chunk[charsRead] = '\0';
+            char* result = processFunc(chunk, shift);
+            if (result) {
+                fwrite(result, sizeof(char), strlen(result), outputFile);
+                delete[] result;
+            }
+            else {
+                std::cerr << "Error: processing function returned null!" << std::endl;
+                fclose(inputFile);
+                fclose(outputFile);
+                return false;
+            }
+        }
+
+        if (ferror(inputFile)) {
+            std::cerr << "Error reading from input file." << std::endl;
+        }
+
+        fclose(inputFile);
+        fclose(outputFile);
+
+        return !ferror(inputFile);
+    }
+
+    void encryptDecryptMenu(int UserChoice) {
+        std::string outputFilePath;
         const int BufferSize = 100;
         char inputText[BufferSize];
         int key;
@@ -38,150 +108,94 @@ public:
         char inputFile[FileNameSize];
         char outputFile[FileNameSize];
 
-        FILE* encryptDecrypt;
-        FILE* outputFilePtr;
-
         char currentPath[FILENAME_MAX];
         if (!_getcwd(currentPath, sizeof(currentPath))) {
-            cerr << "Error getting current working directory" << endl;
-            FreeLibrary(hDll);
-            return 1;
+            std::cerr << "Error getting current working directory" << std::endl;
+            FreeLibrary(handle);
+            return;
         }
         currentPath[sizeof(currentPath) - 1] = '\0';
-        cout << "Current working directory: " << currentPath << endl;
+        std::cout << "Current working directory: " << currentPath << std::endl;
 
         switch (UserChoice) {
-        case 15:
-            cout << "Enter text to encrypt: ";
-            cin.getline(inputText, BufferSize);
-            cout << "Enter key to encrypt: ";
-            cin >> key;
+        case 15: {
+            std::cin.ignore();
+            std::cout << "Enter text to encrypt: ";
+            std::cin.getline(inputText, BufferSize);
+            std::cout << "Enter key to encrypt: ";
+            std::cin >> key;
             {
-                char* encryptedText = encrypt(inputText, key);
+                char* encryptedText = encrypt_ptr(inputText, key);
                 if (encryptedText) {
-                    cout << "Encrypted text: " << encryptedText << endl;
+                    std::cout << "Encrypted text: " << encryptedText << std::endl;
                     delete[] encryptedText;
                 }
             }
             break;
-        case 16:
-            cout << "Enter text to decrypt: ";
-            cin.getline(inputText, BufferSize);
-            cout << "Enter key to decrypt: ";
-            cin >> key;
+        }
+        case 16: {
+            std::cin.ignore();
+            std::cout << "Enter text to decrypt: ";
+            std::cin.getline(inputText, BufferSize);
+            std::cout << "Enter key to decrypt: ";
+            std::cin >> key;
             {
-                char* decryptedText = decrypt(inputText, key);
+                char* decryptedText = decrypt_ptr(inputText, key);
                 if (decryptedText) {
-                    cout << "Decrypted text: " << decryptedText << endl;
+                    std::cout << "Decrypted text: " << decryptedText << std::endl;
                     delete[] decryptedText;
                 }
             }
             break;
+        }
         case 17: {
-            cout << "Enter file name to encrypt: ";
-            cin.getline(inputFile, FileNameSize);
-            cout << "Enter key to encrypt: ";
-            cin >> key;
-            cout << "Enter output file name: ";
-            cin.getline(outputFile, FileNameSize);
+            std::cin.ignore();
+            std::cout << "Enter file name to encrypt: ";
+            fgets(inputFile, FileNameSize, stdin);
+            inputFile[strcspn(inputFile, "\n")] = '\0'; // Remove newline character
+            std::cout << "Enter key to encrypt: ";
+            std::cin >> key;
+            std::cin.ignore();
+            std::cout << "Enter output file name: ";
+            std::getline(std::cin, outputFilePath);
 
-            ifstream infile(inputFile);
-            if (!infile.good()) {
-                cerr << "Could not open the input file! File: " << inputFile << endl;
-                perror("Error");
-                FreeLibrary(hDll);
-                return 1;
+            if (processFile(inputFile, outputFilePath, key, true)) {
+                std::cout << "File encrypted successfully." << std::endl;
             }
-            infile.close();
-
-            cout << "Trying to open input file: " << inputFile << endl;
-            encryptDecrypt = fopen(inputFile, "r");
-            if (!encryptDecrypt) {
-                cerr << "Could not open the input file! File: " << inputFile << endl;
-                perror("Error");
-                FreeLibrary(hDll);
-                return 1;
+            else {
+                std::cerr << "File encryption failed." << std::endl;
             }
-            cout << "Trying to open output file: " << outputFile << endl;
-            outputFilePtr = fopen(outputFile, "w");
-            if (!outputFilePtr) {
-                cerr << "Could not open the output file! File: " << outputFile << endl;
-                perror("Error");
-                fclose(encryptDecrypt);
-                FreeLibrary(hDll);
-                return 1;
-            }
-            const int ChunkSize = 128;
-            char chunk[ChunkSize];
-            size_t charsRead;
-            while ((charsRead = fread(chunk, 1, ChunkSize - 1, encryptDecrypt)) != 0) {
-                chunk[charsRead] = '\0';
-                char* encryptedChunk = encrypt(chunk, key);
-                if (encryptedChunk) {
-                    fwrite(encryptedChunk, sizeof(char), strlen(encryptedChunk), outputFilePtr);
-                    delete[] encryptedChunk;
-                }
-            }
-            fclose(encryptDecrypt);
-            fclose(outputFilePtr);
             break;
         }
         case 18: {
-            cout << "Enter file name to decrypt: ";
-            cin.getline(inputFile, FileNameSize);
-            cout << "Enter key to decrypt: ";
-            cin >> key;
-            cout << "Enter output file name: ";
-            cin.getline(outputFile, FileNameSize);
+            std::cin.ignore();
+            std::cout << "Enter file name to decrypt: ";
+            fgets(inputFile, FileNameSize, stdin);
+            inputFile[strcspn(inputFile, "\n")] = '\0'; // Remove newline character
+            std::cout << "Enter key to decrypt: ";
+            std::cin >> key;
+            std::cin.ignore();
+            std::cout << "Enter output file name: ";
+            std::getline(std::cin, outputFilePath);
 
-            ifstream infile2(inputFile);
-            if (!infile2.good()) {
-                cerr << "Could not open the input file! File: " << inputFile << endl;
-                perror("Error");
-                FreeLibrary(hDll);
-                return 1;
+            if (processFile(inputFile, outputFilePath, key, false)) {
+                std::cout << "File decrypted successfully." << std::endl;
             }
-            infile2.close();
-
-            cout << "Trying to open input file: " << inputFile << endl;
-            encryptDecrypt = fopen(inputFile, "r");
-            if (!encryptDecrypt) {
-                cerr << "Could not open the input file! File: " << inputFile << endl;
-                perror("Error");
-                FreeLibrary(hDll);
-                return 1;
+            else {
+                std::cerr << "File decryption failed." << std::endl;
             }
-            cout << "Trying to open output file: " << outputFile << endl;
-            outputFilePtr = fopen(outputFile, "w");
-            if (!outputFilePtr) {
-                cerr << "Could not open the output file! File: " << outputFile << endl;
-                perror("Error");
-                fclose(encryptDecrypt);
-                FreeLibrary(hDll);
-                return 1;
-            }
-            const int ChunkSize = 128;
-            char chunk[ChunkSize];
-            size_t charsRead;
-            while ((charsRead = fread(chunk, 1, ChunkSize - 1, encryptDecrypt)) != 0) {
-                chunk[charsRead] = '\0';
-                char* decryptedChunk = decrypt(chunk, key);
-                if (decryptedChunk) {
-                    fwrite(decryptedChunk, sizeof(char), strlen(decryptedChunk), outputFilePtr);
-                    delete[] decryptedChunk;
-                }
-            }
-            fclose(encryptDecrypt);
-            fclose(outputFilePtr);
             break;
         }
         default:
-            cout << "Invalid choice." << endl;
+            std::cout << "Invalid choice." << std::endl;
             break;
         }
+    }
 
-        FreeLibrary(hDll);
-        return 0;
+    ~CaesarCipher() {
+        if (handle) {
+            FreeLibrary(handle);
+        }
     }
 };
 
@@ -696,6 +710,7 @@ public:
     }
 
     void run() {
+        CaesarCipher cipher;
         int userChoice = -1;
         while (userChoice != 0) {
             cout << "Choose the command:" << endl;
@@ -752,7 +767,7 @@ public:
             case 16:
             case 17:
             case 18:
-                CaesarCipher::encryptDecryptMenu(userChoice);
+                cipher.encryptDecryptMenu(userChoice);
                 break;
           
             default:
